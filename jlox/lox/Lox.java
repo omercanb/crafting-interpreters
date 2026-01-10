@@ -7,9 +7,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Scanner;
+import java.util.List;
+
+import lox.Scanner;
 
 public class Lox {
+    private static boolean hadError = false;
+
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
             System.out.println("Usage: jlox [script]");
@@ -25,6 +29,10 @@ public class Lox {
         byte bytes[] = Files.readAllBytes(Paths.get(path));
         String fileContents = new String(bytes, Charset.defaultCharset());
         run(fileContents);
+
+        if (hadError) {
+            System.exit(65);
+        }
     }
 
     private static void runPrompt() throws IOException {
@@ -32,23 +40,33 @@ public class Lox {
         BufferedReader reader = new BufferedReader(input);
 
         for (;;) {
-            System.out.println("> ");
+            System.out.print("> ");
             var line = reader.readLine();
             if (line == null) {
                 break;
             }
             run(line);
+            // We don't want an error to stop the session
+            hadError = false;
         }
     }
 
     private static void run(String source) {
-        // Scanner scanner = new Scanner(source);
-        // List<Token> tokens = scanner.scanTokens();
-        //
-        // for (var token : tokens) {
-        // System.out.println(token);
-        // }
-        System.out.println(source);
+        Scanner scanner = new Scanner(source);
+        List<Token> tokens = scanner.scanTokens();
 
+        for (var token : tokens) {
+            System.out.println(token);
+        }
+    }
+
+    static void error(int line, String message) {
+        report(line, "", message);
+    }
+
+    private static void report(int line, String where, String message) {
+        System.err.println(
+                "[line: " + line + "] Error" + where + ": " + message);
+        hadError = true;
     }
 }

@@ -1,11 +1,11 @@
-package lox;
+package loxplus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static lox.TokenType.*;
+import static loxplus.TokenType.*;
 
 class Scanner {
     private final String source;
@@ -117,6 +117,8 @@ class Scanner {
                     while (peek() != '\n' && !isAtEnd()) {
                         advance();
                     }
+                } else if (match('*')) {
+                    consumeBlockComment();
                 } else {
                     addToken(SLASH);
                 }
@@ -201,6 +203,34 @@ class Scanner {
             addToken(IDENTIFIER);
         } else {
             addToken(keyword);
+        }
+    }
+
+    private void consumeBlockComment() {
+        // Keep track of opened comments for nested comment support
+        int openCommentCount = 1;
+        while (openCommentCount >= 1 && !isAtEnd()) {
+            if (peek() == '/' && peekNext() == '*') {
+                // Open a new block comment
+                openCommentCount++;
+                advance();
+                advance();
+            } else if (peek() == '*' && peekNext() == '/') {
+                // Close a block comment
+                openCommentCount--;
+                advance();
+                advance();
+            } else {
+                char c = peek();
+                if (c == '\n') {
+                    line++;
+                }
+                advance();
+            }
+        }
+
+        if (isAtEnd() && openCommentCount >= 1) {
+            Lox.error(line, "Unterminated block comment");
         }
 
     }

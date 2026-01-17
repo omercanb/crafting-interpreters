@@ -111,6 +111,7 @@ class Scanner {
             case '8':
             case '9':
                 addNumber();
+                break;
             case '/':
                 // Check if the slash is the start of a command
                 if (match('/')) {
@@ -132,8 +133,11 @@ class Scanner {
                 break;
 
             default:
-                Lox.error(line, "Unexpected character.");
-                break;
+                if (isAlpha(c)) {
+                    addIdentifier();
+                } else {
+                    Lox.error(line, "Unexpected character.");
+                }
         }
 
     }
@@ -252,6 +256,6 @@ class Scanner {
     }
 
     private boolean isAlphaNumeric(char c) {
-        return isDigit(c) && isAlpha(c);
+        return isDigit(c) || isAlpha(c);
     }
 }

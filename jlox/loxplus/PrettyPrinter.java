@@ -1,5 +1,7 @@
 package loxplus;
 
+import static loxplus.TokenType.*;
+
 class PrettyPrinter implements Expr.Visitor<String> {
     // Prints a (compound) expression
     void printExpr(Expr expr) {
@@ -29,12 +31,22 @@ class PrettyPrinter implements Expr.Visitor<String> {
         return literal.value.toString();
     }
 
+    @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        return "(" + expr.name.lexeme + " = " + expr.value.accept(this) + ")";
+    }
+
+    @Override
+    public String visitVariableExpr(Expr.Variable expr) {
+        return expr.name.lexeme;
+    }
+
     public static void main(String[] args) {
         Expr expression = new Expr.Binary(
                 new Expr.Unary(
-                        new Token(TokenType.MINUS, "-", null, 1),
+                        new Token(MINUS, "-", null, 1),
                         new Expr.Literal(123)),
-                new Token(TokenType.STAR, "*", null, 1),
+                new Token(STAR, "*", null, 1),
                 new Expr.Grouping(
                         new Expr.Literal(45.67)));
 

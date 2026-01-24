@@ -111,14 +111,13 @@ class Scanner {
             case '8':
             case '9':
                 addNumber();
+                break;
             case '/':
                 // Check if the slash is the start of a command
                 if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) {
                         advance();
                     }
-                } else if (match('*')) {
-                    consumeBlockComment();
                 } else {
                     addToken(SLASH);
                 }
@@ -134,8 +133,11 @@ class Scanner {
                 break;
 
             default:
-                Lox.error(line, "Unexpected character.");
-                break;
+                if (isAlpha(c)) {
+                    addIdentifier();
+                } else {
+                    Lox.error(line, "Unexpected character.");
+                }
         }
 
     }
@@ -204,34 +206,6 @@ class Scanner {
         } else {
             addToken(keyword);
         }
-    }
-
-    private void consumeBlockComment() {
-        // Keep track of opened comments for nested comment support
-        int openCommentCount = 1;
-        while (openCommentCount >= 1 && !isAtEnd()) {
-            if (peek() == '/' && peekNext() == '*') {
-                // Open a new block comment
-                openCommentCount++;
-                advance();
-                advance();
-            } else if (peek() == '*' && peekNext() == '/') {
-                // Close a block comment
-                openCommentCount--;
-                advance();
-                advance();
-            } else {
-                char c = peek();
-                if (c == '\n') {
-                    line++;
-                }
-                advance();
-            }
-        }
-
-        if (isAtEnd() && openCommentCount >= 1) {
-            Lox.error(line, "Unterminated block comment");
-        }
 
     }
 
@@ -282,6 +256,6 @@ class Scanner {
     }
 
     private boolean isAlphaNumeric(char c) {
-        return isDigit(c) && isAlpha(c);
+        return isDigit(c) || isAlpha(c);
     }
 }

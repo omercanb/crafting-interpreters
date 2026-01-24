@@ -8,10 +8,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import loxplus.Scanner;
+import static loxplus.TokenType.*;
 
 public class Lox {
+    private static final Interpreter interpreter = new Interpreter();
+
     private static boolean hadError = false;
+    private static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -32,8 +35,14 @@ public class Lox {
         if (hadError) {
             System.exit(65);
         }
+        if (hadRuntimeError) {
+            System.exit(70);
+        }
     }
 
+    // The repl currently doesn't print, making it a rel, which just doesn't have
+    // the nice ring to it.
+    // Will work on this later after the implementation is done
     private static void runPrompt() throws IOException {
         var input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
@@ -53,19 +62,37 @@ public class Lox {
     private static void run(String source) {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
+        Parser parser = new Parser(tokens);
+        List<Stmt> stmts = parser.parse();
 
-        for (var token : tokens) {
-            System.out.println(token);
+        if (hadError) {
+            return;
         }
-    }
-
-    static void error(int line, String message) {
-        report(line, "", message);
+        interpreter.interpret(stmts);
     }
 
     private static void report(int line, String where, String message) {
         System.err.println(
                 "[line: " + line + "] Error" + where + ": " + message);
         hadError = true;
+    }
+
+    static void error(int line, String message) {
+        report(line, "", message);
+    }
+
+    static void error(Token token, String message) {
+        if (token.type == EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() +
+                "\n[line: " + error.token.line + "]");
+        hadRuntimeError = true;
+
     }
 }

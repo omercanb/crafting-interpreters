@@ -23,7 +23,8 @@ public class GenerateAST {
             defineAst(outputDir, "Stmt",
                     Arrays.asList("Expression : Expr expr",
                             "Print : Expr expr",
-                            "Var : Token name, Expr initializer"));
+                            "Var : Token name, Expr initializer",
+                            "Block : List<Stmt> statements"));
         }
     }
 

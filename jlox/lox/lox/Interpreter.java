@@ -16,11 +16,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object visitAssignExpr(Expr.Assign assignExpr) {
-        // assignExpr.value is the right hand side expression
-        Object exprValue = evaluate(assignExpr.value);
-        environment.assign(assignExpr.name, exprValue);
-        return exprValue;
+    public Void visitBlockStmt(Stmt.Block block) {
+        // Create new child scope
+        executeBlock(block.statements, new Environment(environment));
+        return null;
+    }
+
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+            for (var stmt : statements) {
+                execute(stmt);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 
     @Override
@@ -44,6 +55,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expr);
         return null;
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign assignExpr) {
+        // assignExpr.value is the right hand side expression
+        Object exprValue = evaluate(assignExpr.value);
+        environment.assign(assignExpr.name, exprValue);
+        return exprValue;
     }
 
     @Override

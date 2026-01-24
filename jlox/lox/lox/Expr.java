@@ -1,7 +1,11 @@
 package lox;
 
+import java.util.List;
+
 public abstract class Expr {
     interface Visitor<R> {
+        R visitAssignExpr(Assign expr);
+
         R visitBinaryExpr(Binary expr);
 
         R visitUnaryExpr(Unary expr);
@@ -14,6 +18,21 @@ public abstract class Expr {
     }
 
     abstract <R> R accept(Visitor<R> visitor);
+
+    static class Assign extends Expr {
+        final Token name;
+        final Expr value;
+
+        Assign(Token name, Expr value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitAssignExpr(this);
+        }
+    }
 
     static class Binary extends Expr {
         final Expr left;

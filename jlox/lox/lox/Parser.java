@@ -38,14 +38,15 @@ class Parser {
     }
 
     private Stmt varDeclaration() {
-        Token name = consume(IDENTIFIER, "Expect variable name");
+        Token name = consume(IDENTIFIER, "Expected variable name.");
 
         Expr initializer = null;
         if (match(EQUAL)) {
             initializer = expression();
         }
 
-        consume(SEMICOLON, "Expect ';' after a variable declaration");
+        consume(SEMICOLON, "Expected ';' after a variable declaration.");
+        return new Stmt.Var(name, initializer);
     }
 
     private Stmt statement() {
@@ -58,18 +59,37 @@ class Parser {
 
     private Stmt printStmt() {
         Expr expr = expression();
-        consume(SEMICOLON, "Semicolon expected after value");
+        consume(SEMICOLON, "Semicolon expected after value.");
         return new Stmt.Print(expr);
     }
 
     private Stmt exprStmt() {
         Expr expr = expression();
-        consume(TokenType.SEMICOLON, "Semicolon expected after expression");
+        consume(TokenType.SEMICOLON, "Semicolon expected after expression.");
         return new Stmt.Expression(expr);
     }
 
     private Expr expression() {
-        return equality();
+        return assignment();
+    }
+
+    private Expr assignment() {
+        // Left hand side
+        Expr expr = equality();
+
+        if (match(EQUAL)) {
+            Token equals = previous();
+            Expr value = assignment();
+
+            // Is left hand side a valid assignment target
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable) expr).name;
+                return new Expr.Assign(name, value);
+            }
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expr equality() {
@@ -146,14 +166,16 @@ class Parser {
             return new Expr.Literal(previous().literal);
         } else if (match(STRING)) {
             return new Expr.Literal(previous().literal);
+        } else if (match(IDENTIFIER)) {
+            return new Expr.Variable(previous());
         } else if (match(LEFT_PAREN)) {
             // Start of a parenthesized expression
             Expr expr = expression();
             // Expect a closing brace
-            consume(RIGHT_PAREN, "Expected ')' after expression");
+            consume(RIGHT_PAREN, "Expected ')' after expression.");
             return new Expr.Grouping(expr);
         }
-        throw error(peek(), "Expect expression");
+        throw error(peek(), "Expect expression.");
     }
 
     // Used for panic mode recovery

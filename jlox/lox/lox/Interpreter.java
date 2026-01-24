@@ -2,9 +2,8 @@ package lox;
 
 import java.util.List;
 
-import static lox.TokenType.*;
-
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    private Environment environment = new Environment();
 
     void interpret(List<Stmt> stmts) {
         try {
@@ -17,15 +16,39 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitAssignExpr(Expr.Assign assignExpr) {
+        // assignExpr.value is the right hand side expression
+        Object exprValue = evaluate(assignExpr.value);
+        environment.assign(assignExpr.name, exprValue);
+        return exprValue;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var varStmt) {
+        Object value = null;
+        if (varStmt.initializer != null) {
+            value = evaluate(varStmt.initializer);
+        }
+
+        environment.define(varStmt.name.lexeme, value);
+        return null;
+    }
+
+    @Override
     public Void visitPrintStmt(Stmt.Print printStmt) {
         System.out.println(stringify(evaluate(printStmt.expr)));
         return null;
     }
 
     @Override
-    public Void visitExprStmt(Stmt.Expression exprStmt) {
-        evaluate(exprStmt.expr);
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expr);
         return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return environment.get(expr.name);
     }
 
     @Override
@@ -43,10 +66,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         // The unary expressions are logical negation (!) and additive negation (-)
         Object right = evaluate(unary);
         switch (unary.op.type) {
-            case TokenType.MINUS:
+            case MINUS:
                 checkNumberOperand(unary.op, right);
                 return -(Double) right;
-            case TokenType.BANG:
+            case BANG:
                 return !isTruthy(right);
             default:
                 break;
@@ -60,41 +83,41 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object right = evaluate(binary.right);
 
         switch (binary.op.type) {
-            case TokenType.PLUS:
+            case PLUS:
                 if (left instanceof Double && right instanceof Double) {
                     return (double) left + (double) right;
                 } else if (left instanceof String && right instanceof String) {
                     return (String) left + (String) right;
                 } else {
-                    throw new RuntimeError(binary.op, "Operands must be two numbers or two strings");
+                    throw new RuntimeError(binary.op, "Operands must be two numbers or two strings.");
                 }
-            case TokenType.MINUS:
+            case MINUS:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left - (double) right;
-            case TokenType.STAR:
+            case STAR:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left * (double) right;
-            case TokenType.SLASH:
+            case SLASH:
                 checkNumberOperands(binary.op, left, right);
                 if ((double) right == 0.0) {
-                    throw new RuntimeError(binary.op, "Divide by zero");
+                    throw new RuntimeError(binary.op, "Divide by zero.");
                 }
                 return (double) left / (double) right;
-            case TokenType.LESS:
+            case LESS:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left < (double) right;
-            case TokenType.LESS_EQUAL:
+            case LESS_EQUAL:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left <= (double) right;
-            case TokenType.GREATER:
+            case GREATER:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left > (double) right;
-            case TokenType.GREATER_EQUAL:
+            case GREATER_EQUAL:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left >= (double) right;
-            case TokenType.EQUAL_EQUAL:
+            case EQUAL_EQUAL:
                 return isEqual(left, right);
-            case TokenType.BANG_EQUAL:
+            case BANG_EQUAL:
                 return !isEqual(left, right);
             default:
                 break;
@@ -126,13 +149,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private void checkNumberOperand(Token operator, Object operand) {
         if (!(operand instanceof Double)) {
-            throw new RuntimeError(operator, "Operand must be a number");
+            throw new RuntimeError(operator, "Operand must be a number.");
         }
     }
 
     private void checkNumberOperands(Token operator, Object left, Object right) {
         if (!(left instanceof Double && right instanceof Double)) {
-            throw new RuntimeError(operator, "Operand must be a number");
+            throw new RuntimeError(operator, "Operand must be a number.");
         }
     }
 

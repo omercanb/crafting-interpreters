@@ -14,13 +14,14 @@ public class GenerateAST {
         } else {
             String outputDir = args[0];
             defineAst(outputDir, "Expr", Arrays.asList(
+                    "Assign : Token name, Expr value",
                     "Binary : Expr left, Token op, Expr right",
                     "Unary : Token op, Expr right",
                     "Grouping : Expr expr",
                     "Literal : Object value",
                     "Variable: Token name"));
             defineAst(outputDir, "Stmt",
-                    Arrays.asList("Expr : Expr expr",
+                    Arrays.asList("Expression : Expr expr",
                             "Print : Expr expr",
                             "Var : Token name, Expr initializer"));
         }

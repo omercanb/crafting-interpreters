@@ -1,14 +1,31 @@
 package lox;
 
-class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
 
-    void interpret(Expr expression) {
+import static lox.TokenType.*;
+
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
+    void interpret(List<Stmt> stmts) {
         try {
-            Object value = expression.accept(this);
-            System.out.println(value);
+            for (var stmt : stmts) {
+                execute(stmt);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print printStmt) {
+        System.out.println(stringify(evaluate(printStmt.expr)));
+        return null;
+    }
+
+    @Override
+    public Void visitExprStmt(Stmt.Expression exprStmt) {
+        evaluate(exprStmt.expr);
+        return null;
     }
 
     @Override
@@ -18,18 +35,18 @@ class Interpreter implements Expr.Visitor<Object> {
 
     @Override
     public Object visitGroupingExpr(Expr.Grouping grouping) {
-        return grouping.expr.accept(this);
+        return evaluate(grouping.expr);
     }
 
     @Override
     public Object visitUnaryExpr(Expr.Unary unary) {
         // The unary expressions are logical negation (!) and additive negation (-)
-        Object right = unary.right.accept(this);
+        Object right = evaluate(unary);
         switch (unary.op.type) {
-            case MINUS:
+            case TokenType.MINUS:
                 checkNumberOperand(unary.op, right);
                 return -(Double) right;
-            case BANG:
+            case TokenType.BANG:
                 return !isTruthy(right);
             default:
                 break;
@@ -39,11 +56,11 @@ class Interpreter implements Expr.Visitor<Object> {
 
     @Override
     public Object visitBinaryExpr(Expr.Binary binary) {
-        Object left = binary.left.accept(this);
-        Object right = binary.right.accept(this);
+        Object left = evaluate(binary.left);
+        Object right = evaluate(binary.right);
 
         switch (binary.op.type) {
-            case PLUS:
+            case TokenType.PLUS:
                 if (left instanceof Double && right instanceof Double) {
                     return (double) left + (double) right;
                 } else if (left instanceof String && right instanceof String) {
@@ -51,33 +68,33 @@ class Interpreter implements Expr.Visitor<Object> {
                 } else {
                     throw new RuntimeError(binary.op, "Operands must be two numbers or two strings");
                 }
-            case MINUS:
+            case TokenType.MINUS:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left - (double) right;
-            case STAR:
+            case TokenType.STAR:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left * (double) right;
-            case SLASH:
+            case TokenType.SLASH:
                 checkNumberOperands(binary.op, left, right);
                 if ((double) right == 0.0) {
                     throw new RuntimeError(binary.op, "Divide by zero");
                 }
                 return (double) left / (double) right;
-            case LESS:
+            case TokenType.LESS:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left < (double) right;
-            case LESS_EQUAL:
+            case TokenType.LESS_EQUAL:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left <= (double) right;
-            case GREATER:
+            case TokenType.GREATER:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left > (double) right;
-            case GREATER_EQUAL:
+            case TokenType.GREATER_EQUAL:
                 checkNumberOperands(binary.op, left, right);
                 return (double) left >= (double) right;
-            case EQUAL_EQUAL:
+            case TokenType.EQUAL_EQUAL:
                 return isEqual(left, right);
-            case BANG_EQUAL:
+            case TokenType.BANG_EQUAL:
                 return !isEqual(left, right);
             default:
                 break;
@@ -119,4 +136,26 @@ class Interpreter implements Expr.Visitor<Object> {
         }
     }
 
+    private String stringify(Object object) {
+        if (object == null)
+            return "nil";
+
+        if (object instanceof Double) {
+            String text = object.toString();
+            if (text.endsWith(".0")) {
+                text = text.substring(0, text.length() - 2);
+            }
+            return text;
+        }
+
+        return object.toString();
+    }
+
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    private Object evaluate(Expr expr) {
+        return expr.accept(this);
+    }
 }

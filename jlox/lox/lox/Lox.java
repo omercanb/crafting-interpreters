@@ -1,6 +1,5 @@
 package lox;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import lox.Scanner;
+import static lox.TokenType.*;
 
 public class Lox {
     private static final Interpreter interpreter = new Interpreter();
@@ -41,6 +40,9 @@ public class Lox {
         }
     }
 
+    // The repl currently doesn't print, making it a rel, which just doesn't have
+    // the nice ring to it.
+    // Will work on this later after the implementation is done
     private static void runPrompt() throws IOException {
         var input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
@@ -61,12 +63,12 @@ public class Lox {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
         Parser parser = new Parser(tokens);
-        Expr expr = parser.parse();
+        List<Stmt> stmts = parser.parse();
 
         if (hadError) {
             return;
         }
-        interpreter.interpret(expr);
+        interpreter.interpret(stmts);
     }
 
     private static void report(int line, String where, String message) {
@@ -80,7 +82,7 @@ public class Lox {
     }
 
     static void error(Token token, String message) {
-        if (token.type == TokenType.EOF) {
+        if (token.type == EOF) {
             report(token.line, " at end", message);
         } else {
             report(token.line, " at '" + token.lexeme + "'", message);

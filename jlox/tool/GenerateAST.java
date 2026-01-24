@@ -2,8 +2,6 @@ package tool;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +17,12 @@ public class GenerateAST {
                     "Binary : Expr left, Token op, Expr right",
                     "Unary : Token op, Expr right",
                     "Grouping : Expr expr",
-                    "Literal : Object value"));
+                    "Literal : Object value",
+                    "Variable: Token name"));
+            defineAst(outputDir, "Stmt",
+                    Arrays.asList("Expr : Expr expr",
+                            "Print : Expr expr",
+                            "Var : Token name, Expr initializer"));
         }
     }
 
@@ -32,7 +35,7 @@ public class GenerateAST {
         writer.println();
         writer.println("import java.util.List;");
         writer.println();
-        writer.println("public abstract class Expr {");
+        writer.println("public abstract class " + baseName + " {");
         // Extract the class names and fields for each type
         var classNames = new ArrayList<String>();
         var fields = new ArrayList<ArrayList<TypeNamePair>>();

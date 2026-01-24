@@ -1,8 +1,9 @@
 package lox;
 
-import static lox.TokenType.*;
-
+import java.util.ArrayList;
 import java.util.List;
+
+import static lox.TokenType.*;
 
 class Parser {
     private static class ParseError extends RuntimeException {
@@ -15,12 +16,56 @@ class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
+    List<Stmt> parse() {
+        List<Stmt> stmts = new ArrayList<>();
+        while (!isAtEnd()) {
+            stmts.add(declaration());
+        }
+        return stmts;
+    }
+
+    private Stmt declaration() {
         try {
-            return expression();
+            if (match(VAR)) {
+                return varDeclaration();
+            } else {
+                return statement();
+            }
         } catch (ParseError error) {
+            synchronize();
             return null;
         }
+    }
+
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect variable name");
+
+        Expr initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after a variable declaration");
+    }
+
+    private Stmt statement() {
+        if (match(PRINT)) {
+            return printStmt();
+        } else {
+            return exprStmt();
+        }
+    }
+
+    private Stmt printStmt() {
+        Expr expr = expression();
+        consume(SEMICOLON, "Semicolon expected after value");
+        return new Stmt.Print(expr);
+    }
+
+    private Stmt exprStmt() {
+        Expr expr = expression();
+        consume(TokenType.SEMICOLON, "Semicolon expected after expression");
+        return new Stmt.Expression(expr);
     }
 
     private Expr expression() {
@@ -121,14 +166,14 @@ class Parser {
                 return;
 
             switch (peek().type) {
-                case CLASS:
-                case FUN:
-                case VAR:
-                case FOR:
-                case IF:
-                case WHILE:
-                case PRINT:
-                case RETURN:
+                case TokenType.CLASS:
+                case TokenType.FUN:
+                case TokenType.VAR:
+                case TokenType.FOR:
+                case TokenType.IF:
+                case TokenType.WHILE:
+                case TokenType.PRINT:
+                case TokenType.RETURN:
                     return;
                 default:
                     break;
@@ -187,7 +232,7 @@ class Parser {
     }
 
     private boolean isAtEnd() {
-        return peek().type == EOF;
+        return peek().type == TokenType.EOF;
     }
 
 }

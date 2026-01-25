@@ -6,6 +6,7 @@ public abstract class Expr {
     interface Visitor<R> {
         R visitAssignExpr(Assign expr);
         R visitBinaryExpr(Binary expr);
+        R visitLogicalExpr(Logical expr);
         R visitUnaryExpr(Unary expr);
         R visitGroupingExpr(Grouping expr);
         R visitLiteralExpr(Literal expr);
@@ -38,6 +39,21 @@ public abstract class Expr {
         @Override
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitBinaryExpr(this);
+        }
+    }
+    static class Logical extends Expr {
+        final Expr left;
+        final Token op;
+        final Expr right;
+
+        Logical(Expr left, Token op, Expr right) {
+            this.left = left; 
+            this.op = op; 
+            this.right = right; 
+        }
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitLogicalExpr(this);
         }
     }
     static class Unary extends Expr {

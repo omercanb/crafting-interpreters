@@ -16,6 +16,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitLogicalExpr(Expr.Logical logicalExpr) {
+        // Make sure to evaluate the left expression only once
+        Object leftVal = evaluate(logicalExpr.left);
+        // We short circuit the right value
+        if (logicalExpr.op.type == TokenType.AND) {
+            if (isTruthy(leftVal)) {
+                return evaluate(logicalExpr.right);
+            } else {
+                // The left val is falsy and we return falsy
+                return leftVal;
+            }
+        } else {
+            if (isTruthy(leftVal)) {
+                // The left val is truthy and we return truthy
+                return leftVal;
+            } else {
+                return evaluate(logicalExpr.right);
+            }
+        }
+    }
+
+    @Override
     public Void visitIfStmt(Stmt.If ifStmt) {
         if (isTruthy(evaluate(ifStmt.condition))) {
             execute(ifStmt.thenBranch);

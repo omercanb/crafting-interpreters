@@ -100,7 +100,7 @@ class Parser {
 
     private Expr assignment() {
         // Left hand side
-        Expr expr = equality();
+        Expr expr = or();
 
         if (match(EQUAL)) {
             Token equals = previous();
@@ -112,6 +112,32 @@ class Parser {
                 return new Expr.Assign(name, value);
             }
             error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
+
+    private Expr or() {
+        Expr expr = and();
+
+        Expr right = null;
+        while (match(OR)) {
+            Token op = previous();
+            right = and();
+            expr = new Expr.Logical(expr, op, right);
+        }
+
+        return expr;
+    }
+
+    private Expr and() {
+        Expr expr = equality();
+
+        Expr right = null;
+        while (match(AND)) {
+            Token op = previous();
+            right = equality();
+            expr = new Expr.Logical(expr, op, right);
         }
 
         return expr;

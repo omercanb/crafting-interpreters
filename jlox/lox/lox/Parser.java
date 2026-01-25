@@ -1,6 +1,7 @@
 package lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static lox.TokenType.*;
@@ -56,6 +57,8 @@ class Parser {
             return ifStatement();
         } else if (match(WHILE)) {
             return whileStatement();
+        } else if (match(FOR)) {
+            return forStatement();
         } else if (match(LEFT_BRACE)) {
             return new Stmt.Block(block());
         } else {
@@ -72,6 +75,64 @@ class Parser {
 
         consume(RIGHT_BRACE, "Expected '}' after block.");
         return statements;
+    }
+
+    private Stmt forStatement() {
+        consume(LEFT_PAREN, "Expected '(' after for.");
+        Stmt initializer;
+        if (match(SEMICOLON)) {
+            initializer = null;
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = exprStmt();
+        }
+
+        Expr condition;
+        if (match(SEMICOLON)) {
+            condition = null;
+        } else {
+            condition = expression();
+            consume(SEMICOLON, "Expected ';' after loop condition.");
+        }
+
+        Expr increment;
+        if (match(RIGHT_PAREN)) {
+            increment = null;
+        } else {
+            increment = expression();
+            consume(RIGHT_PAREN, "Expect ')' after while condition.");
+        }
+
+        Stmt body = statement();
+
+        // Desugar the for loop syntax into a while loop
+        // The new body becomes the body + increment
+        Stmt newBody;
+        if (increment == null) {
+            newBody = body;
+        } else {
+            newBody = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
+        }
+
+        // If the loop condition was empty it becomes while(true)
+        Expr newCondition;
+        if (condition == null) {
+            newCondition = new Expr.Literal(true);
+        } else {
+            newCondition = condition;
+        }
+        Stmt loop = new Stmt.While(newCondition, newBody);
+
+        // We create the block the loop runs in and add the initializer if there is one
+        Stmt loopBlock;
+        if (initializer == null) {
+            loopBlock = new Stmt.Block(Arrays.asList(loop));
+        } else {
+            loopBlock = new Stmt.Block(Arrays.asList(initializer, loop));
+        }
+
+        return loopBlock;
     }
 
     private Stmt whileStatement() {

@@ -54,6 +54,8 @@ class Parser {
             return printStmt();
         } else if (match(IF)) {
             return ifStatement();
+        } else if (match(WHILE)) {
+            return whileStatement();
         } else if (match(LEFT_BRACE)) {
             return new Stmt.Block(block());
         } else {
@@ -70,6 +72,16 @@ class Parser {
 
         consume(RIGHT_BRACE, "Expected '}' after block.");
         return statements;
+    }
+
+    private Stmt whileStatement() {
+        consume(LEFT_PAREN, "Expect '(' after while.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after while condition.");
+        Stmt body = statement();
+
+        return new Stmt.While(condition, body);
+
     }
 
     private Stmt ifStatement() {

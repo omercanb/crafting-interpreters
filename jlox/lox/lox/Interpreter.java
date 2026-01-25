@@ -133,8 +133,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case PLUS:
                 if (left instanceof Double && right instanceof Double) {
                     return (double) left + (double) right;
-                } else if (left instanceof String && right instanceof String) {
-                    return (String) left + (String) right;
+                } else if (left instanceof String || left instanceof Double && right instanceof String
+                        || right instanceof Double) {
+                    // If both are not numbers but if they are a combination of strings and numbers,
+                    // convert to string.
+
+                    return stringify(left) + stringify(right);
                 } else {
                     throw new RuntimeError(binary.op, "Operands must be two numbers or two strings.");
                 }
@@ -170,6 +174,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 break;
         }
         return null;
+
     }
 
     private void executeBlock(List<Stmt> statements, Environment environment) {
@@ -223,11 +228,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             return "nil";
 
         if (object instanceof Double) {
-            String text = object.toString();
-            if (text.endsWith(".0")) {
-                text = text.substring(0, text.length() - 2);
+            double number = (double) object;
+            if (number == Math.floor(number)) {
+                return String.format("%.0f", number);
+            } else {
+                return String.format("%f", number);
             }
-            return text;
         }
 
         return object.toString();

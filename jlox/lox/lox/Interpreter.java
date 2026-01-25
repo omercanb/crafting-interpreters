@@ -16,22 +16,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitIfStmt(Stmt.If ifStmt) {
+        if (isTruthy(evaluate(ifStmt.condition))) {
+            execute(ifStmt.thenBranch);
+        } else if (ifStmt.elseBranch != null) {
+            execute(ifStmt.elseBranch);
+        }
+        return null;
+    }
+
+    @Override
     public Void visitBlockStmt(Stmt.Block block) {
         // Create new child scope
         executeBlock(block.statements, new Environment(environment));
         return null;
-    }
-
-    private void executeBlock(List<Stmt> statements, Environment environment) {
-        Environment previous = this.environment;
-        try {
-            this.environment = environment;
-            for (var stmt : statements) {
-                execute(stmt);
-            }
-        } finally {
-            this.environment = previous;
-        }
     }
 
     @Override
@@ -142,6 +140,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 break;
         }
         return null;
+    }
+
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+            for (var stmt : statements) {
+                execute(stmt);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 
     private boolean isTruthy(Object object) {

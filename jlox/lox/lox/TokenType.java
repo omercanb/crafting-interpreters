@@ -23,6 +23,8 @@ enum TokenType {
     CLASS, THIS, SUPER, NIL,
     PRINT,
 
+    BREAK, CONTINUE,
+
     EOF
 
 }

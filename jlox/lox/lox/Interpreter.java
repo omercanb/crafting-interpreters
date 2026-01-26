@@ -1,9 +1,12 @@
 package lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private Environment environment = new Environment();
+    private boolean loopBreak = false;
+    private boolean loopContinue = false;
 
     void interpret(List<Stmt> stmts) {
         try {
@@ -16,10 +19,80 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitWhileStmt(Stmt.While whileStmt) {
-        while (isTruthy(evaluate(whileStmt.condition))) {
-            execute(whileStmt.body);
+    public Object visitCallExpr(Expr.Call callExpr) {
+        Object callee = evaluate(callExpr.callee);
+
+        List<Object> arguments = new ArrayList<>();
+        for (Expr arg : callExpr.arguments) {
+            arguments.add(evaluate(arg));
         }
+
+        // "notcallable"()
+        if (!(callee instanceof LoxCallable)) {
+            throw new RuntimeError(callExpr.paren, "Can only call functions and classes.");
+        }
+        LoxCallable function = (LoxCallable) callee;
+
+        // Arity checking is here instead of inside concrete implementations because
+        // both functions and classes need to implement this logic.
+        if (function.arity() != arguments.size()) {
+            throw new RuntimeError(callExpr.paren,
+                    "Expected " + function.arity() + " arguments, but got " + arguments.size() + ".");
+        }
+        return function.call(this, arguments);
+    }
+
+    @Override
+    public Void visitForStmt(Stmt.For forStmt) {
+        // Create a new scope for the for loop
+        Environment previous = environment;
+        environment = new Environment(previous);
+        try {
+            if (forStmt.initializer != null) {
+                execute(forStmt.initializer);
+            }
+            if (forStmt.initializer != null) {
+                while (isTruthy(evaluate(forStmt.condition)) && !loopBreak) {
+                    execute(forStmt.body);
+                    evaluate(forStmt.increment);
+                    loopContinue = false;
+                }
+            } else {
+                while (isTruthy(evaluate(forStmt.condition)) && !loopBreak) {
+                    execute(forStmt.body);
+                    loopContinue = false;
+                }
+            }
+            if (loopBreak) {
+                loopBreak = false;
+            }
+        } finally {
+            environment = previous;
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While whileStmt) {
+        while (isTruthy(evaluate(whileStmt.condition)) && !loopBreak) {
+            execute(whileStmt.body);
+            loopContinue = false;
+        }
+        if (loopBreak) {
+            loopBreak = false;
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt) {
+        loopBreak = true;
+        return null;
+    }
+
+    @Override
+    public Void visitContinueStmt(Stmt.Continue stmt) {
+        loopContinue = true;
         return null;
     }
 
@@ -177,18 +250,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) {
-        Environment previous = this.environment;
-        try {
-            this.environment = environment;
-            for (var stmt : statements) {
-                execute(stmt);
-            }
-        } finally {
-            this.environment = previous;
-        }
-    }
-
     private boolean isTruthy(Object object) {
         // False and Null are falsy, everything else is truthy, like in Ruby
         if (object == null) {
@@ -239,11 +300,35 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return object.toString();
     }
 
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+            for (var stmt : statements) {
+                execute(stmt);
+                if (loopContinue || loopBreak) {
+                    return;
+                }
+            }
+        } finally {
+            this.environment = previous;
+        }
+    }
+
     private void execute(Stmt stmt) {
+        if (loopContinue || loopBreak) {
+            return;
+        }
         stmt.accept(this);
     }
 
     private Object evaluate(Expr expr) {
         return expr.accept(this);
     }
+}
+
+class BreakException extends Exception {
+}
+
+class ContinueException extends Exception {
 }

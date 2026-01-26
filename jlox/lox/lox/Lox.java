@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static lox.TokenType.*;
 
@@ -16,11 +18,33 @@ public class Lox {
     private static boolean hadError = false;
     private static boolean hadRuntimeError = false;
 
+    private static boolean printTree = false;
+
     public static void main(String[] args) throws IOException {
-        if (args.length > 1) {
+        // Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        // System.out.println("\n=== Program terminated - Stack Trace ===");
+        // Thread.currentThread().dumpStack();
+        //
+        // // Or print stack traces for all threads
+        // System.out.println("\n=== All Thread Stack Traces ===");
+        // Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
+        // for (Map.Entry<Thread, StackTraceElement[]> entry : allThreads.entrySet()) {
+        // Thread thread = entry.getKey();
+        // StackTraceElement[] stackTrace = entry.getValue();
+        // System.out.println("\nThread: " + thread.getName());
+        // for (StackTraceElement element : stackTrace) {
+        // System.out.println("\tat " + element);
+        // }
+        // }
+        // }));
+        if (Arrays.asList(args).contains("--print")) {
+            printTree = true;
+        }
+
+        if (args.length > 2) {
             System.out.println("Usage: jlox [script]");
             System.exit(64);
-        } else if (args.length == 1) {
+        } else if (args.length >= 1) {
             runFile(args[0]);
         } else {
             runPrompt();
@@ -64,6 +88,11 @@ public class Lox {
         List<Token> tokens = scanner.scanTokens();
         Parser parser = new Parser(tokens);
         List<Stmt> stmts = parser.parse();
+        if (printTree) {
+            for (var stmt : stmts) {
+                new PrettyPrinter().printStmt(stmt);
+            }
+        }
 
         if (hadError) {
             return;

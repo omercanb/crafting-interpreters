@@ -2,7 +2,7 @@ package loxplus;
 
 import static loxplus.TokenType.*;
 
-class PrettyPrinter implements Expr.Visitor<String> {
+class PrettyPrinter implements Stmt.Visitor<R>, Expr.Visitor<String> {
     // Prints a (compound) expression
     void printExpr(Expr expr) {
         System.out.println(expr.accept(this));

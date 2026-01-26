@@ -12,6 +12,8 @@ class Parser {
 
     private final List<Token> tokens;
     private int current = 0;
+    // Used to check if break and continues are valid
+    private int currentLoopNestingDepth = 0;
 
     Parser(List<Token> tokens) {
         this.tokens = tokens;
@@ -59,11 +61,31 @@ class Parser {
             return whileStatement();
         } else if (match(FOR)) {
             return forStatement();
+        } else if (match(BREAK)) {
+            return breakStatement();
+        } else if (match(CONTINUE)) {
+            return continueStatement();
         } else if (match(LEFT_BRACE)) {
             return new Stmt.Block(block());
         } else {
             return exprStmt();
         }
+    }
+
+    private Stmt continueStatement() {
+        if (currentLoopNestingDepth == 0) {
+            error(previous(), "Continue statements only allowed in loops.");
+        }
+        consume(SEMICOLON, "Expected ';' after continue.");
+        return new Stmt.Continue();
+    }
+
+    private Stmt breakStatement() {
+        if (currentLoopNestingDepth == 0) {
+            error(previous(), "Break statements only allowed in loops.");
+        }
+        consume(SEMICOLON, "Expected ';' after break.");
+        return new Stmt.Break();
     }
 
     private List<Stmt> block() {
@@ -104,42 +126,51 @@ class Parser {
             consume(RIGHT_PAREN, "Expect ')' after while condition.");
         }
 
+        currentLoopNestingDepth++;
         Stmt body = statement();
+        currentLoopNestingDepth--;
 
-        // Desugar the for loop syntax into a while loop
-        // The new body becomes the body + increment
-        Stmt newBody;
-        if (increment == null) {
-            newBody = body;
-        } else {
-            newBody = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
-        }
+        return new Stmt.For(initializer, condition, increment, body);
 
-        // If the loop condition was empty it becomes while(true)
-        Expr newCondition;
-        if (condition == null) {
-            newCondition = new Expr.Literal(true);
-        } else {
-            newCondition = condition;
-        }
-        Stmt loop = new Stmt.While(newCondition, newBody);
-
-        // We create the block the loop runs in and add the initializer if there is one
-        Stmt loopBlock;
-        if (initializer == null) {
-            loopBlock = new Stmt.Block(Arrays.asList(loop));
-        } else {
-            loopBlock = new Stmt.Block(Arrays.asList(initializer, loop));
-        }
-
-        return loopBlock;
+        // // Desugar the for loop syntax into a while loop
+        // // The new body becomes the body + increment
+        // Stmt newBody;
+        // if (increment == null) {
+        // newBody = body;
+        // } else {
+        // newBody = new Stmt.Block(Arrays.asList(body, new
+        // Stmt.Expression(increment)));
+        // }
+        //
+        // // If the loop condition was empty it becomes while(true)
+        // Expr newCondition;
+        // if (condition == null) {
+        // newCondition = new Expr.Literal(true);
+        // } else {
+        // newCondition = condition;
+        // }
+        // Stmt loop = new Stmt.While(newCondition, newBody);
+        //
+        // // We create the block the loop runs in and add the initializer if there is
+        // one
+        // Stmt loopBlock;
+        // if (initializer == null) {
+        // loopBlock = new Stmt.Block(Arrays.asList(loop));
+        // } else {
+        // loopBlock = new Stmt.Block(Arrays.asList(initializer, loop));
+        // }
+        //
+        // return loopBlock;
     }
 
     private Stmt whileStatement() {
         consume(LEFT_PAREN, "Expect '(' after while.");
         Expr condition = expression();
         consume(RIGHT_PAREN, "Expect ')' after while condition.");
+        // Handle nesting depth for parsing break and continue statements
+        currentLoopNestingDepth++;
         Stmt body = statement();
+        currentLoopNestingDepth--;
 
         return new Stmt.While(condition, body);
 
@@ -275,8 +306,38 @@ class Parser {
             Expr expr = new Expr.Unary(operator, right);
             return expr;
         } else {
-            return primary();
+            return call();
         }
+    }
+
+    private Expr call() {
+        Expr expr = primary();
+        while (true) {
+            if (match(LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else {
+                break;
+            }
+        }
+        return expr;
+    }
+
+    // Parse the arguments for a function call and the closing paren
+    private Expr finishCall(Expr callee) {
+        List<Expr> arguments = new ArrayList<>();
+        if (!check(LEFT_PAREN)) {
+            do {
+                if (arguments.size() >= 255) {
+                    error(peek(), "Can't have more than 255 arguments.");
+                }
+                Expr arg = expression();
+                arguments.add(arg);
+                // Maybe we could throw a nice error if the comma is missing
+            } while (match(COMMA));
+        }
+
+        Token paren = consume(RIGHT_PAREN, "Expected ')' after arguments.");
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr primary() {
@@ -299,7 +360,7 @@ class Parser {
             consume(RIGHT_PAREN, "Expected ')' after expression.");
             return new Expr.Grouping(expr);
         }
-        throw error(peek(), "Expect expression.");
+        throw error(peek(), "Expected expression.");
     }
 
     // Used for panic mode recovery

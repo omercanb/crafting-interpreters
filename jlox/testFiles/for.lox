@@ -13,7 +13,7 @@ for (; a < 3;) {
 print "Testing with the fibonacci numbers";
 var prev = 0;
 var cur = 1;
-for (var i = 0; i < 100; i = i + 1) {
+for (var i = 0; i < 10; i = i + 1) {
     print cur;
     var temp = cur;
     cur = cur + prev;

@@ -20,13 +20,17 @@ public class GenerateAST {
                     "Unary : Token op, Expr right",
                     "Grouping : Expr expr",
                     "Literal : Object value",
-                    "Variable: Token name"));
+                    "Variable: Token name",
+                    "Call : Expr callee, Token paren, List<Expr> arguments"));
             defineAst(outputDir, "Stmt",
                     Arrays.asList("Expression : Expr expr",
                             "Print : Expr expr",
                             "Var : Token name, Expr initializer",
                             "If : Expr condition, Stmt thenBranch, Stmt elseBranch",
                             "While : Expr condition, Stmt body",
+                            "For : Stmt initializer, Expr condition, Expr increment, Stmt body",
+                            "Break",
+                            "Continue",
                             "Block : List<Stmt> statements"));
         }
     }
@@ -47,9 +51,13 @@ public class GenerateAST {
         for (var type : types) {
             String className = type.split(":")[0].trim();
             classNames.add(className);
+            fields.add(new ArrayList<>());
+            // No ':' contained in string, so no fields for this type
+            if (type.split(":").length <= 1) {
+                continue;
+            }
             String fieldsString = type.split(":")[1].trim();
             String[] pairs = fieldsString.split(", ");
-            fields.add(new ArrayList<>());
             for (var pair : pairs) {
                 String fieldType = pair.split(" ")[0];
                 String fieldName = pair.split(" ")[1];

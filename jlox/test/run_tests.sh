@@ -17,7 +17,7 @@ fi
 
 # Compile the test framework
 echo "Compiling test framework..."
-javac -d "$SCRIPT_DIR/bin" "$SCRIPT_DIR/src/main/java/lox"/*.java
+javac -d "$SCRIPT_DIR/bin" "$SCRIPT_DIR/src"/*.java
 
 if [ $? -ne 0 ]; then
     echo "Compilation failed"
@@ -27,4 +27,4 @@ fi
 # Run tests (uses relative paths by default)
 echo "Running tests..."
 cd "$SCRIPT_DIR"
-java -cp bin lox.LoxTestFramework "${1:-./../testFiles}" "${2:-./../lox/lox}"
+java -cp bin test.LoxTestFramework "${1:-./../testFiles}" "${2:-./../lox/lox}"

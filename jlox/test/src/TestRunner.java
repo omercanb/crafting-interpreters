@@ -1,8 +1,7 @@
-package lox;
+package test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class TestRunner {
     private final File loxFile;

@@ -325,7 +325,7 @@ class Parser {
     // Parse the arguments for a function call and the closing paren
     private Expr finishCall(Expr callee) {
         List<Expr> arguments = new ArrayList<>();
-        if (!check(LEFT_PAREN)) {
+        if (!check(RIGHT_PAREN)) {
             do {
                 if (arguments.size() >= 255) {
                     error(peek(), "Can't have more than 255 arguments.");

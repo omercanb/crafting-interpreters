@@ -27,15 +27,15 @@ This will:
 
 ```bash
 cd test
-javac -d bin src/main/java/lox/*.java
-java -cp bin lox.LoxTestFramework ../testFiles ../lox/lox
+javac -d bin src/*.java
+java -cp bin test.LoxTestFramework ../testFiles ../lox/lox
 ```
 
 Or with default relative paths:
 
 ```bash
 cd test
-java -cp bin lox.LoxTestFramework
+java -cp bin test.LoxTestFramework
 ```
 
 ## Directory structure
@@ -50,10 +50,11 @@ jlox/
 │   └── ...
 ├── test/
 │   ├── run_tests.sh         # Easy test runner
-│   ├── src/main/java/lox/
-│   │   ├── LoxTestFramework.java
-│   │   ├── TestRunner.java
-│   │   └── TestResult.java
+│   ├── README.md
+│   ├── src/
+│   │   ├── LoxTestFramework.java   # package test
+│   │   ├── TestRunner.java         # package test
+│   │   └── TestResult.java         # package test
 │   └── bin/                 # Compiled classes (generated)
 └── lox/lox/
     └── (compiled Lox classes)

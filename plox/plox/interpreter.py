@@ -1,22 +1,16 @@
 from typing import Any, List
 
-from plox.types import expr as expr_module, stmt as stmt_module
+from plox.native_functions.native_clock import NativeClock
+from plox.native_functions.native_print import NativePrint
+from plox.types import expr as expr_module
+from plox.types import stmt as stmt_module
+from plox.types.control_flow import BreakException, ContinueException, ReturnException
 from plox.types.environment import Environment
 from plox.types.lox_callable import LoxCallable
 from plox.types.lox_function import LoxFunction
 from plox.types.lox_token import Token
-from plox.native_functions.native_clock import NativeClock
-from plox.native_functions.native_print import NativePrint
 from plox.types.runtime_error import RuntimeError
 from plox.types.token_type import TokenType
-
-
-class BreakException(Exception):
-    pass
-
-
-class ContinueException(Exception):
-    pass
 
 
 class Interpreter:
@@ -191,6 +185,12 @@ class Interpreter:
     def visit_Function(self, node: stmt_module.Function) -> None:
         function: LoxFunction = LoxFunction(node, self.environment)
         self.environment.define(node.name.lexeme, function)
+
+    def visit_Return(self, node: stmt_module.Return) -> None:
+        value: Any = None
+        if node.value != None:
+            value = self.evaluate(node.value)
+        raise ReturnException(value)
 
     def visit_Break(self, node: stmt_module.Break) -> None:
         raise BreakException()

@@ -1,6 +1,7 @@
 from typing import Any
 
-from plox.types import expr as expr_module, stmt as stmt_module
+from plox.types import expr as expr_module
+from plox.types import stmt as stmt_module
 
 
 class AstPrinter:
@@ -82,6 +83,9 @@ class AstPrinter:
             + self.parenthesize("body", *node.body)
             + ")"
         )
+
+    def visit_Return(self, node: stmt_module.Return) -> str:
+        return self.parenthesize("return", node.value)
 
     def visit_Break(self, node: stmt_module.Break) -> str:
         return "break"

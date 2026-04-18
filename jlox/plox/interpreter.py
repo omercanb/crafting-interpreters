@@ -1,0 +1,232 @@
+from plox.environment import Environment
+from plox.token_type import TokenType
+from plox.runtime_error import RuntimeError
+from plox.lox_callable import LoxCallable
+from plox.lox_function import LoxFunction
+from plox.native_clock import NativeClock
+from plox.native_print import NativePrint
+from plox import expr as expr_module
+from plox import stmt as stmt_module
+
+
+class BreakException(Exception):
+    pass
+
+
+class ContinueException(Exception):
+    pass
+
+
+class Interpreter:
+    def __init__(self):
+        self.globals = Environment()
+        self.environment = self.globals
+        self.globals.define("clock", NativeClock())
+        self.globals.define("print", NativePrint())
+
+    def interpret(self, statements: list) -> None:
+        try:
+            for statement in statements:
+                self.execute(statement)
+        except RuntimeError as error:
+            from plox import lox
+            lox.runtime_error(error)
+
+    def execute(self, statement) -> None:
+        self.visit(statement)
+
+    def evaluate(self, expression):
+        return self.visit(expression)
+
+    def visit(self, node):
+        method_name = f"visit_{type(node).__name__}"
+        method = getattr(self, method_name, None)
+        if method is None:
+            raise NotImplementedError(f"No visitor for {type(node).__name__}")
+        return method(node)
+
+    def execute_block(self, statements: list, environment: Environment) -> None:
+        previous = self.environment
+        try:
+            self.environment = environment
+            for statement in statements:
+                self.execute(statement)
+        finally:
+            self.environment = previous
+
+    # Expression visitors
+    def visit_Assign(self, node):
+        value = self.evaluate(node.value)
+        self.environment.assign(node.name, value)
+        return value
+
+    def visit_Binary(self, node):
+        left = self.evaluate(node.left)
+        right = self.evaluate(node.right)
+
+        token_type = node.op.token_type
+        if token_type == TokenType.GREATER:
+            self.check_number_operands(node.op, left, right)
+            return left > right
+        elif token_type == TokenType.GREATER_EQUAL:
+            self.check_number_operands(node.op, left, right)
+            return left >= right
+        elif token_type == TokenType.LESS:
+            self.check_number_operands(node.op, left, right)
+            return left < right
+        elif token_type == TokenType.LESS_EQUAL:
+            self.check_number_operands(node.op, left, right)
+            return left <= right
+        elif token_type == TokenType.BANG_EQUAL:
+            return not self.is_equal(left, right)
+        elif token_type == TokenType.EQUAL_EQUAL:
+            return self.is_equal(left, right)
+        elif token_type == TokenType.MINUS:
+            self.check_number_operands(node.op, left, right)
+            return left - right
+        elif token_type == TokenType.PLUS:
+            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+                return left + right
+            if isinstance(left, str) or isinstance(right, str):
+                return self.stringify(left) + self.stringify(right)
+            raise RuntimeError(node.op, "Operands must be two numbers or two strings.")
+        elif token_type == TokenType.SLASH:
+            self.check_number_operands(node.op, left, right)
+            if right == 0:
+                raise RuntimeError(node.op, "Division by zero.")
+            return left / right
+        elif token_type == TokenType.STAR:
+            self.check_number_operands(node.op, left, right)
+            return left * right
+        return None
+
+    def visit_Logical(self, node):
+        left = self.evaluate(node.left)
+        if node.op.token_type == TokenType.OR:
+            if self.is_truthy(left):
+                return left
+        else:
+            if not self.is_truthy(left):
+                return left
+        return self.evaluate(node.right)
+
+    def visit_Unary(self, node):
+        right = self.evaluate(node.right)
+        token_type = node.op.token_type
+        if token_type == TokenType.BANG:
+            return not self.is_truthy(right)
+        elif token_type == TokenType.MINUS:
+            self.check_number_operand(node.op, right)
+            return -right
+        return None
+
+    def visit_Grouping(self, node):
+        return self.evaluate(node.expr)
+
+    def visit_Literal(self, node):
+        return node.value
+
+    def visit_Variable(self, node):
+        return self.environment.get(node.name)
+
+    def visit_Call(self, node):
+        callee = self.evaluate(node.callee)
+        arguments = [self.evaluate(arg) for arg in node.arguments]
+        if not isinstance(callee, LoxCallable):
+            raise RuntimeError(node.paren, "Can only call functions and classes.")
+        if len(arguments) != callee.arity():
+            raise RuntimeError(
+                node.paren,
+                f"Expected {callee.arity()} arguments but got {len(arguments)}."
+            )
+        return callee.call(self, arguments)
+
+    # Statement visitors
+    def visit_Expression(self, node):
+        self.evaluate(node.expr)
+
+    def visit_Print(self, node):
+        value = self.evaluate(node.expr)
+        print(self.stringify(value))
+
+    def visit_Var(self, node):
+        value = None
+        if node.initializer is not None:
+            value = self.evaluate(node.initializer)
+        self.environment.define(node.name.lexeme, value)
+
+    def visit_If(self, node):
+        if self.is_truthy(self.evaluate(node.condition)):
+            self.execute(node.then_branch)
+        elif node.else_branch is not None:
+            self.execute(node.else_branch)
+
+    def visit_While(self, node):
+        while self.is_truthy(self.evaluate(node.condition)):
+            try:
+                self.execute(node.body)
+            except BreakException:
+                break
+            except ContinueException:
+                continue
+
+    def visit_For(self, node):
+        if node.initializer is not None:
+            self.execute(node.initializer)
+        while node.condition is None or self.is_truthy(self.evaluate(node.condition)):
+            try:
+                self.execute(node.body)
+            except BreakException:
+                break
+            except ContinueException:
+                pass
+            if node.increment is not None:
+                self.evaluate(node.increment)
+
+    def visit_Function(self, node):
+        function = LoxFunction(node, self.environment)
+        self.environment.define(node.name.lexeme, function)
+
+    def visit_Break(self, node):
+        raise BreakException()
+
+    def visit_Continue(self, node):
+        raise ContinueException()
+
+    def visit_Block(self, node):
+        self.execute_block(node.statements, Environment(self.environment))
+
+    # Helpers
+    def is_truthy(self, value) -> bool:
+        if value is None or value is False:
+            return False
+        return True
+
+    def is_equal(self, a, b) -> bool:
+        if a is None and b is None:
+            return True
+        if a is None or b is None:
+            return False
+        return a == b
+
+    def check_number_operand(self, op, operand) -> None:
+        if isinstance(operand, (int, float)):
+            return
+        raise RuntimeError(op, "Operand must be a number.")
+
+    def check_number_operands(self, op, left, right) -> None:
+        if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+            return
+        raise RuntimeError(op, "Operands must be numbers.")
+
+    def stringify(self, value: object) -> str:
+        if value is None:
+            return "nil"
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, float):
+            text = str(value)
+            if text.endswith(".0"):
+                return text[:-2]
+            return text
+        return str(value)

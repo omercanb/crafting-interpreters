@@ -3,6 +3,8 @@ package lox;
 import java.util.ArrayList;
 import java.util.List;
 
+import lox.Stmt.Function;
+
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = new Environment(globals);
@@ -36,6 +38,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
+    }
+
+    @Override
+    public Void visitFunctionStmt(Stmt.Function funcStmt) {
+        LoxFunction function = new LoxFunction(funcStmt);
+        environment.define(funcStmt.name.lexeme, function);
+        return null;
     }
 
     @Override
@@ -320,7 +329,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return object.toString();
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) {
+    void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;

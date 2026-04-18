@@ -11,6 +11,7 @@ import lox.Stmt.Break;
 import lox.Stmt.Continue;
 import lox.Stmt.Expression;
 import lox.Stmt.For;
+import lox.Stmt.Function;
 import lox.Stmt.If;
 import lox.Stmt.Print;
 import lox.Stmt.Var;
@@ -24,6 +25,12 @@ class PrettyPrinter implements Stmt.Visitor<String>, Expr.Visitor<String> {
 
     public void printStmt(Stmt stmt) {
         System.out.println(stmt.accept(this));
+    }
+
+    @Override
+    public String visitFunctionStmt(Function stmt) {
+        // TODO Auto-generated method stub
+        return "";
     }
 
     @Override

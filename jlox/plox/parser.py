@@ -35,6 +35,7 @@ class Parser:
             self.synchronize()
             return None
 
+    # kind is used to distinguish functions and methods
     def function(self, kind: str) -> stmt_module.Function:
         name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
         self.consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
@@ -53,6 +54,16 @@ class Parser:
         body = self.block()
         return stmt_module.Function(name, params, body)
 
+    def return_(self) -> stmt_module.Return:
+        keyword = self.previous()
+        value = None
+        if not self.check(TokenType.SEMICOLON):
+            # An expression is returned
+            value = self.expression()
+
+        self.consume(TokenType.SEMICOLON, "Expect ';' after return value.")
+        return stmt_module.Return(keyword, value)
+
     def var_declaration(self) -> stmt_module.Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
         initializer = None
@@ -66,6 +77,8 @@ class Parser:
             return self.for_statement()
         if self.match(TokenType.IF):
             return self.if_statement()
+        if self.match(TokenType.RETURN):
+            return self.return_()
         if self.match(TokenType.WHILE):
             return self.while_statement()
         if self.match(TokenType.LEFT_BRACE):

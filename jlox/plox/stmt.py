@@ -56,6 +56,8 @@ class Function(Stmt):
 
 @dataclass
 class Return(Stmt):
+    keyword: "Token"
+    value: Optional["Expr"]
     pass
 
 

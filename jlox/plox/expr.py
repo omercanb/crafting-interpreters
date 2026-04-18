@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, TYPE_CHECKING
+from typing import Any, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from plox.lox_token import Token
@@ -54,4 +54,4 @@ class Variable(Expr):
 class Call(Expr):
     callee: Expr
     paren: "Token"
-    arguments: list
+    arguments: List[Expr]

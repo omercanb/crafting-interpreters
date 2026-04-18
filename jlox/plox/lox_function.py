@@ -1,16 +1,22 @@
+from typing import Any, List, TYPE_CHECKING
+
 from plox.lox_callable import LoxCallable
 from plox.environment import Environment
 
+if TYPE_CHECKING:
+    from plox.stmt import Function
+    from plox.interpreter import Interpreter
+
 
 class LoxFunction(LoxCallable):
-    def __init__(self, declaration, closure):
-        self.declaration = declaration
-        self.closure = closure
+    def __init__(self, declaration: "Function", closure: Environment) -> None:
+        self.declaration: "Function" = declaration
+        self.closure: Environment = closure
 
     def arity(self) -> int:
         return len(self.declaration.params)
 
-    def call(self, interpreter, arguments: list):
+    def call(self, interpreter: "Interpreter", arguments: List[Any]) -> Any:
         environment = Environment(interpreter.globals)
         for param, arg in zip(self.declaration.params, arguments):
             environment.define(param.lexeme, arg)

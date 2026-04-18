@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 
 class RuntimeError(Exception):
-    def __init__(self, token: "Token", message: str):
-        self.token = token
-        self.message = message
+    def __init__(self, token: "Token", message: str) -> None:
+        self.token: "Token" = token
+        self.message: str = message
         super().__init__(message)

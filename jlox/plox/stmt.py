@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from plox.expr import Expr
@@ -50,8 +50,8 @@ class For(Stmt):
 @dataclass
 class Function(Stmt):
     name: "Token"
-    params: list
-    body: list
+    params: List["Token"]
+    body: List["Stmt"]
 
 
 @dataclass
@@ -66,4 +66,4 @@ class Continue(Stmt):
 
 @dataclass
 class Block(Stmt):
-    statements: list
+    statements: List["Stmt"]

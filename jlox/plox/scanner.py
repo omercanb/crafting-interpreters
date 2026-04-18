@@ -1,9 +1,11 @@
+from typing import Any, Dict, List
+
 from plox.token_type import TokenType
 from plox.lox_token import Token
 
 
 class Scanner:
-    KEYWORDS = {
+    KEYWORDS: Dict[str, TokenType] = {
         "and": TokenType.AND,
         "break": TokenType.BREAK,
         "continue": TokenType.CONTINUE,
@@ -20,14 +22,14 @@ class Scanner:
         "while": TokenType.WHILE,
     }
 
-    def __init__(self, source: str):
-        self.source = source
-        self.tokens = []
-        self.start = 0
-        self.current = 0
-        self.line = 1
+    def __init__(self, source: str) -> None:
+        self.source: str = source
+        self.tokens: List[Token] = []
+        self.start: int = 0
+        self.current: int = 0
+        self.line: int = 1
 
-    def scan_tokens(self) -> list:
+    def scan_tokens(self) -> List[Token]:
         while not self.is_at_end():
             self.start = self.current
             self.scan_token()
@@ -35,8 +37,8 @@ class Scanner:
         return self.tokens
 
     def scan_token(self) -> None:
-        c = self.advance()
-        single_char_tokens = {
+        c: str = self.advance()
+        single_char_tokens: Dict[str, TokenType] = {
             "(": TokenType.LEFT_PAREN,
             ")": TokenType.RIGHT_PAREN,
             "{": TokenType.LEFT_BRACE,
@@ -134,6 +136,6 @@ class Scanner:
         self.current += 1
         return c
 
-    def add_token(self, token_type: TokenType, literal=None) -> None:
+    def add_token(self, token_type: TokenType, literal: Any = None) -> None:
         text = self.source[self.start : self.current]
         self.tokens.append(Token(token_type, text, literal, self.line))

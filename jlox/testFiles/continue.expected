@@ -1,9 +1,9 @@
-(print (Test continue without new block, print to three except 2))
-(for (var i = 0.0) (< i 4.0) (i = (+ i 1.0)) { (if (== i 2.0) continue) (print (i)) })
-(print (Test continue in new block, print to three except 2))
-(for (var i = 0.0) (< i 4.0) (i = (+ i 1.0)) { (if (== i 2.0) { continue (print (Shouldn't print this)) }) (print (i)) })
-(print (Test continue in nested block, print to three except 2))
-(for (var i = 0.0) (< i 4.0) (i = (+ i 1.0)) { (if (== i 2.0) { { continue } (print (Shouldn't print this)) }) (print (i)) })
+(call print Test continue without new block, print to three except 2)
+(for (var i = 0.0) (< i 4.0) (assign i (+ i 1.0)) { (if (== i 2.0) continue) (call print i) })
+(call print Test continue in new block, print to three except 2)
+(for (var i = 0.0) (< i 4.0) (assign i (+ i 1.0)) { (if (== i 2.0) { continue (call print Shouldn't print this) }) (call print i) })
+(call print Test continue in nested block, print to three except 2)
+(for (var i = 0.0) (< i 4.0) (assign i (+ i 1.0)) { (if (== i 2.0) { { continue } (call print Shouldn't print this) }) (call print i) })
 Test continue without new block, print to three except 2
 0
 1

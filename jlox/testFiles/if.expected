@@ -1,7 +1,7 @@
 (var a = 5.0)
-(if (== a 5.0) (print (a is 5)))
-(if (== a 5.0) { (print (a is five in a block)) (print (this is the block)) })
-(if (!= a 5.0) { (print (this should not show)) } { (print (else is working)) })
+(if (== a 5.0) (call print a is 5))
+(if (== a 5.0) { (call print a is five in a block) (call print this is the block) })
+(if (!= a 5.0) { (call print this should not show) } { (call print else is working) })
 a is 5
 a is five in a block
 this is the block

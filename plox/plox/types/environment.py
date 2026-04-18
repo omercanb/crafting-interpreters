@@ -1,7 +1,7 @@
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
-    from plox.lox_token import Token
+    from plox.types.lox_token import Token
 
 
 class Environment:
@@ -17,7 +17,7 @@ class Environment:
             return self.values[name.lexeme]
         if self.enclosing is not None:
             return self.enclosing.get(name)
-        from plox.runtime_error import RuntimeError
+        from plox.types.runtime_error import RuntimeError
 
         raise RuntimeError(name, f"Undefined variable '{name.lexeme}'.")
 
@@ -28,6 +28,6 @@ class Environment:
         if self.enclosing is not None:
             self.enclosing.assign(name, value)
             return
-        from plox.runtime_error import RuntimeError
+        from plox.types.runtime_error import RuntimeError
 
         raise RuntimeError(name, f"Undefined variable '{name.lexeme}'.")

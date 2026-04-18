@@ -1,7 +1,7 @@
 from typing import Any, List, TYPE_CHECKING
 
 from plox.lox_callable import LoxCallable
-from plox.environment import Environment
+from plox.types.environment import Environment
 
 if TYPE_CHECKING:
     from plox.stmt import Function

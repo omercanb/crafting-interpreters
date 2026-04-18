@@ -1,0 +1,10 @@
+(call clock)
+(call print 1.0)
+(call print (call clock))
+(call print clock)
+(call print (call print 10.0))
+1
+1776524016.853507
+<native fn>
+10
+nil

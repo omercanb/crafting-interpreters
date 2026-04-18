@@ -1,10 +1,10 @@
 from typing import Any
 
-from plox import expr as expr_module
+from plox.types import expr as expr_module
 from plox import stmt as stmt_module
 
 
-class PrettyPrinter:
+class AstPrinter:
     def print_stmt(self, statement: stmt_module.Stmt) -> None:
         print(self.visit(statement))
 

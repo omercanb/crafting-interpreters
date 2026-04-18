@@ -1,15 +1,15 @@
-from typing import Any, List, Optional
+from typing import Any, List
 
-from plox.environment import Environment
-from plox.token_type import TokenType
-from plox.runtime_error import RuntimeError
-from plox.lox_token import Token
+from plox.types import expr as expr_module
+from plox import stmt as stmt_module
+from plox.types.environment import Environment
 from plox.lox_callable import LoxCallable
 from plox.lox_function import LoxFunction
-from plox.native_clock import NativeClock
-from plox.native_print import NativePrint
-from plox import expr as expr_module
-from plox import stmt as stmt_module
+from plox.lox_token import Token
+from plox.native_functions.native_clock import NativeClock
+from plox.native_functions.native_print import NativePrint
+from plox.runtime_error import RuntimeError
+from plox.token_type import TokenType
 
 
 class BreakException(Exception):

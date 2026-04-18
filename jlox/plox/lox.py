@@ -3,9 +3,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from plox.ast_printer import AstPrinter
 from plox.interpreter import Interpreter
 from plox.parser import Parser
-from plox.pretty_printer import PrettyPrinter
 from plox.scanner import Scanner
 
 had_error = False
@@ -69,7 +69,7 @@ def run(source: str) -> None:
 
     if print_tree:
         for statement in statements:
-            PrettyPrinter().print_stmt(statement)
+            AstPrinter().print_stmt(statement)
 
     if had_error:
         return

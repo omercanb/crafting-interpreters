@@ -108,7 +108,7 @@ class LoxTestFramework:
         return None
 
     def generate_expected_output(self, lox_file: str, output: str):
-        expected_file = lox_file.replace(".lox", ".expected.plox")
+        expected_file = lox_file.replace(".lox", ".expected")
         try:
             with open(expected_file, "w") as f:
                 f.write(output)

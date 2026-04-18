@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from plox import expr as expr_module
+from plox.types import expr as expr_module
 from plox import stmt as stmt_module
 from plox.lox_token import Token
 from plox.token_type import TokenType

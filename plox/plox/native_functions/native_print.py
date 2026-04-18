@@ -1,6 +1,6 @@
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, List, TYPE_CHECKING
 
-from plox.lox_callable import LoxCallable
+from plox.types.lox_callable import LoxCallable
 
 if TYPE_CHECKING:
     from plox.interpreter import Interpreter

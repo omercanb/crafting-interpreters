@@ -1,2 +1,2 @@
-(print ((+ ((and true hello)) ((or nil  world)))))
+(call print (+ (group (and True hello)) (group (or nil  world))))
 hello world

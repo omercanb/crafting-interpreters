@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from plox.lox_token import Token
+    from plox.types.lox_token import Token
 
 
 class Expr:

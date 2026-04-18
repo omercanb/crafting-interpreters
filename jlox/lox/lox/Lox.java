@@ -95,6 +95,11 @@ public class Lox {
         }
 
         if (hadError) {
+            if (printTree) {
+                for (var stmt : stmts) {
+                    new PrettyPrinter().printStmt(stmt);
+                }
+            }
             return;
         }
         interpreter.interpret(stmts);

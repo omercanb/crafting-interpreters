@@ -1,1 +1,2 @@
+(print ((+ ((and true hello)) ((or nil  world)))))
 hello world

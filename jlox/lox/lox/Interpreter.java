@@ -3,8 +3,6 @@ package lox;
 import java.util.ArrayList;
 import java.util.List;
 
-import lox.Stmt.Function;
-
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = new Environment(globals);
@@ -13,21 +11,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private boolean loopContinue = false;
 
     Interpreter() {
-        globals.define("clock", new LoxCallable() {
-            @Override
-            public int arity() {
-                return 0;
-            }
+        addNativeFunctions();
+    }
 
-            public Object call(Interpreter interpreter, List<Object> arguments) {
-                return (double) System.currentTimeMillis() / 1000.0;
-            }
-
-            @Override
-            public String toString() {
-                return "<native fn clock>";
-            }
-        });
+    void addNativeFunctions() {
+        globals.define("clock", new NativeClock());
+        globals.define("print", new NativePrint());
     }
 
     void interpret(List<Stmt> stmts) {
@@ -80,20 +69,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             if (forStmt.initializer != null) {
                 execute(forStmt.initializer);
             }
-            if (forStmt.initializer != null) {
-                while (isTruthy(evaluate(forStmt.condition)) && !loopBreak) {
-                    execute(forStmt.body);
-                    evaluate(forStmt.increment);
-                    loopContinue = false;
+            try {
+                while (isTruthy(evaluate(forStmt.condition))) {
+                    try {
+                        execute(forStmt.body);
+                    } catch (ContinueException e) {
+                        // Handle continue expection by continuing to next iteration
+                    }
+                    if (forStmt.increment != null)
+                        evaluate(forStmt.increment);
                 }
-            } else {
-                while (isTruthy(evaluate(forStmt.condition)) && !loopBreak) {
-                    execute(forStmt.body);
-                    loopContinue = false;
-                }
-            }
-            if (loopBreak) {
-                loopBreak = false;
+            } catch (BreakException e) {
+                // Handle break exception by leaving the loop
             }
         } finally {
             environment = previous;
@@ -103,26 +90,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitWhileStmt(Stmt.While whileStmt) {
-        while (isTruthy(evaluate(whileStmt.condition)) && !loopBreak) {
-            execute(whileStmt.body);
-            loopContinue = false;
-        }
-        if (loopBreak) {
-            loopBreak = false;
+        try {
+            while (isTruthy(evaluate(whileStmt.condition))) {
+                try {
+                    execute(whileStmt.body);
+                } catch (ContinueException e) {
+                    // Handle continue expection by continuing to next iteration
+                }
+            }
+        } catch (BreakException e) {
+            // Handle break exception by leaving the loop
         }
         return null;
     }
 
     @Override
     public Void visitBreakStmt(Stmt.Break stmt) {
-        loopBreak = true;
-        return null;
+        throw new BreakException();
     }
 
     @Override
     public Void visitContinueStmt(Stmt.Continue stmt) {
-        loopContinue = true;
-        return null;
+        throw new ContinueException();
     }
 
     @Override
@@ -313,7 +302,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private String stringify(Object object) {
+    public String stringify(Object object) {
         if (object == null)
             return "nil";
 
@@ -351,13 +340,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         stmt.accept(this);
     }
 
-    private Object evaluate(Expr expr) {
+    public Object evaluate(Expr expr) {
         return expr.accept(this);
     }
 }
 
-class BreakException extends Exception {
+class BreakException extends RuntimeException {
 }
 
-class ContinueException extends Exception {
+class ContinueException extends RuntimeException {
 }

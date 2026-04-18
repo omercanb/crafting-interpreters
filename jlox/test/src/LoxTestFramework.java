@@ -44,7 +44,7 @@ public class LoxTestFramework {
 
     private void runTest(File testFile) throws IOException, InterruptedException {
         TestRunner runner = new TestRunner(testFile, classpath);
-        runner.run();
+        runner.runWithPrint();
 
         String expectedFile = testFile.getAbsolutePath().replace(".lox", ".expected");
         String expected = readExpectedOutput(expectedFile);

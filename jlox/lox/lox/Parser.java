@@ -78,9 +78,10 @@ class Parser {
     }
 
     private Stmt statement() {
-        if (match(PRINT)) {
-            return printStmt();
-        } else if (match(IF)) {
+        // TODO test removing the print statement
+        // if (match(PRINT)) {
+        // return printStmt();
+        if (match(IF)) {
             return ifStatement();
         } else if (match(WHILE)) {
             return whileStatement();
@@ -404,7 +405,7 @@ class Parser {
                 case TokenType.FOR:
                 case TokenType.IF:
                 case TokenType.WHILE:
-                case TokenType.PRINT:
+                    // case TokenType.PRINT:
                 case TokenType.RETURN:
                     return;
                 default:

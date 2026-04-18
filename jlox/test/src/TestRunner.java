@@ -16,17 +16,24 @@ public class TestRunner {
     }
 
     public void run() throws IOException, InterruptedException {
+        // Run normally to capture output
         ProcessBuilder pb = new ProcessBuilder(
-            "java", "-cp", classpath, "lox.Lox", loxFile.getAbsolutePath()
-        );
+                "java", "-cp", classpath, "lox.Lox", loxFile.getAbsolutePath());
 
         Process process = pb.start();
-
-        // Capture stdout
         this.output = new String(process.getInputStream().readAllBytes());
-        // Capture stderr
         this.error = new String(process.getErrorStream().readAllBytes());
+        this.exitCode = process.waitFor();
+    }
 
+    public void runWithPrint() throws IOException, InterruptedException {
+        // Run with --print to capture syntax tree
+        ProcessBuilder pb = new ProcessBuilder(
+                "java", "-cp", classpath, "lox.Lox", loxFile.getAbsolutePath(), "--print");
+
+        Process process = pb.start();
+        this.output = new String(process.getInputStream().readAllBytes());
+        this.error = new String(process.getErrorStream().readAllBytes());
         this.exitCode = process.waitFor();
     }
 

@@ -1,1 +1,1 @@
-print (true and "hello") + (nil or " world");
+print((true and "hello") + (nil or " world"));

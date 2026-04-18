@@ -18,6 +18,7 @@ class Environment:
         if self.enclosing is not None:
             return self.enclosing.get(name)
         from plox.runtime_error import RuntimeError
+
         raise RuntimeError(name, f"Undefined variable '{name.lexeme}'.")
 
     def assign(self, name: "Token", value: Any) -> None:
@@ -28,4 +29,5 @@ class Environment:
             self.enclosing.assign(name, value)
             return
         from plox.runtime_error import RuntimeError
+
         raise RuntimeError(name, f"Undefined variable '{name.lexeme}'.")

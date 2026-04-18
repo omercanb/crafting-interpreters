@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from plox.token_type import TokenType
-from plox.lox_token import Token
 from plox import expr as expr_module
 from plox import stmt as stmt_module
+from plox.lox_token import Token
+from plox.token_type import TokenType
 
 
 class ParseError(Exception):
@@ -43,7 +43,9 @@ class Parser:
             while True:
                 if len(params) >= 255:
                     self.error(self.peek(), "Can't have more than 255 parameters.")
-                params.append(self.consume(TokenType.IDENTIFIER, "Expect parameter name."))
+                params.append(
+                    self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                )
                 if not self.match(TokenType.COMMA):
                     break
         self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
@@ -184,7 +186,12 @@ class Parser:
 
     def comparison(self) -> expr_module.Expr:
         expr = self.term()
-        while self.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL):
+        while self.match(
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+        ):
             op = self.previous()
             right = self.term()
             expr = expr_module.Binary(expr, op, right)
@@ -284,6 +291,7 @@ class Parser:
 
     def error(self, token: Token, message: str) -> ParseError:
         from plox import lox
+
         lox.error(token.line, message)
         raise ParseError()
 

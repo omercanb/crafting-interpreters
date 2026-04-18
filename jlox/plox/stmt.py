@@ -55,6 +55,11 @@ class Function(Stmt):
 
 
 @dataclass
+class Return(Stmt):
+    pass
+
+
+@dataclass
 class Break(Stmt):
     pass
 

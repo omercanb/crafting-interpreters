@@ -61,11 +61,15 @@ class Scanner:
         elif c == "!":
             self.add_token(TokenType.BANG_EQUAL if self.match("=") else TokenType.BANG)
         elif c == "=":
-            self.add_token(TokenType.EQUAL_EQUAL if self.match("=") else TokenType.EQUAL)
+            self.add_token(
+                TokenType.EQUAL_EQUAL if self.match("=") else TokenType.EQUAL
+            )
         elif c == "<":
             self.add_token(TokenType.LESS_EQUAL if self.match("=") else TokenType.LESS)
         elif c == ">":
-            self.add_token(TokenType.GREATER_EQUAL if self.match("=") else TokenType.GREATER)
+            self.add_token(
+                TokenType.GREATER_EQUAL if self.match("=") else TokenType.GREATER
+            )
         elif c == " " or c == "\r" or c == "\t":
             pass
         elif c == "\n":
@@ -78,6 +82,7 @@ class Scanner:
             self.identifier()
         else:
             from plox import lox
+
             lox.error(self.line, f"Unexpected character: {c}")
 
     def identifier(self) -> None:
@@ -104,6 +109,7 @@ class Scanner:
             self.advance()
         if self.is_at_end():
             from plox import lox
+
             lox.error(self.line, "Unterminated string.")
             return
         self.advance()

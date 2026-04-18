@@ -16,7 +16,8 @@ class TestRunner:
     def run_with_print(self):
         result = subprocess.run(
             ["python3", "plox/lox.py", "--print", self.lox_file],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
         self.output = result.stdout
         self.error = result.stderr
@@ -24,7 +25,9 @@ class TestRunner:
 
 
 class TestResult:
-    def __init__(self, test_file: str, passed: bool, expected: str, actual: str, error: str):
+    def __init__(
+        self, test_file: str, passed: bool, expected: str, actual: str, error: str
+    ):
         self.test_file = test_file
         self.passed = passed
         self.expected = expected
@@ -80,8 +83,13 @@ class LoxTestFramework:
         if expected is None:
             self.generate_expected_output(lox_file, runner.output)
             self.results.append(
-                TestResult(lox_file, True, runner.output, runner.output,
-                           "Generated new expected output")
+                TestResult(
+                    lox_file,
+                    True,
+                    runner.output,
+                    runner.output,
+                    "Generated new expected output",
+                )
             )
         else:
             actual = runner.output
@@ -93,7 +101,7 @@ class LoxTestFramework:
     def read_expected_output(self, path: str):
         try:
             if os.path.exists(path):
-                with open(path, 'r') as f:
+                with open(path, "r") as f:
                     return f.read()
         except IOError as e:
             print(f"Error reading expected output: {e}", file=sys.stderr)
@@ -102,7 +110,7 @@ class LoxTestFramework:
     def generate_expected_output(self, lox_file: str, output: str):
         expected_file = lox_file.replace(".lox", ".expected.plox")
         try:
-            with open(expected_file, 'w') as f:
+            with open(expected_file, "w") as f:
                 f.write(output)
             print(f"Generated: {expected_file}")
         except IOError as e:

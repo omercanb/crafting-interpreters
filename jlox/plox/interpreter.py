@@ -33,6 +33,7 @@ class Interpreter:
                 self.execute(statement)
         except RuntimeError as error:
             from plox import lox
+
             lox.runtime_error(error)
 
     def execute(self, statement: stmt_module.Stmt) -> None:
@@ -48,7 +49,9 @@ class Interpreter:
             raise NotImplementedError(f"No visitor for {type(node).__name__}")
         return method(node)
 
-    def execute_block(self, statements: List[stmt_module.Stmt], environment: Environment) -> None:
+    def execute_block(
+        self, statements: List[stmt_module.Stmt], environment: Environment
+    ) -> None:
         previous = self.environment
         try:
             self.environment = environment
@@ -140,7 +143,7 @@ class Interpreter:
         if len(arguments) != callee.arity():
             raise RuntimeError(
                 node.paren,
-                f"Expected {callee.arity()} arguments but got {len(arguments)}."
+                f"Expected {callee.arity()} arguments but got {len(arguments)}.",
             )
         return callee.call(self, arguments)
 
